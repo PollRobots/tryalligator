@@ -1,5 +1,5 @@
 const path = require("path");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
+const HtmlWebpack = require("html-webpack-plugin");
 const TerserWebpack = require("terser-webpack-plugin");
 const { CleanWebpackPlugin: CleanWebpack } = require("clean-webpack-plugin");
 
@@ -53,7 +53,7 @@ module.exports = (env, argv) => {
 
     plugins: [
       new CleanWebpack(),
-      new HtmlWebpackPlugin({
+      new HtmlWebpack({
         title: "Try Alligator",
         filename: "tryalligator.html",
         template: template,

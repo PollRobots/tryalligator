@@ -1,4 +1,12 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-ReactDOM.render(<h1>Hello, World!</h1>, document.getElementById("app"));
+import { DotBox } from "./components/DotBox";
+
+ReactDOM.render(
+  <div>
+    <h1>Try Alligator</h1>
+    <DotBox width={512} height={512} />
+  </div>,
+  document.getElementById("app")
+);
