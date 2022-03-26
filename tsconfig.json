@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "module": "ES2020",
+    "target": "ESNext",
+    "jsx":"react",
+    "lib": ["dom", "esnext"],
+    "declaration": false,
+    "strict": true
+  }
+}
