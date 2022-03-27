@@ -124,7 +124,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div style={{ display: "grid", rowGap: "0.5em" }}>
+    <div>
       <h1>Try Alligator</h1>
       <div>
         Symmetry:{" "}
@@ -145,36 +145,50 @@ const App: React.FC = () => {
           step={1}
           value={snap}
           onChange={(e) => setSnap(Number(e.target.value))}
-        />{" "}
-        <button onClick={() => selectImage()} disabled={loading}>
+        />
+        <button
+          style={{ width: "8em", height: "2em", margin: "0.5em" }}
+          onClick={() => selectImage()}
+          disabled={loading}
+        >
           {loading ? "Loading..." : "Select Image"}
         </button>
         <button
+          style={{ width: "8em", height: "2em", margin: "0.5em" }}
           onClick={() => saveImage()}
           disabled={!image.data || points.length < 3}
         >
-          "Save Image"
+          Save Image
         </button>
       </div>
-      <div>
-        <DotBox
-          imageData={image.data}
-          width={image.width}
-          height={image.height}
-          snap={snap}
-          symmetry={symmetry}
-          onUpdatePoints={(pts) => setPoints(pts)}
-        />
-      </div>
-      <div>
-        <TriangleBox
-          imageData={image.data}
-          width={image.width}
-          height={image.height}
-          snap={snap}
-          points={points}
-          symmetry={symmetry}
-        />
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          rowGap: "0.5em",
+          columnGap: "0.5em",
+        }}
+      >
+        <div>
+          <DotBox
+            imageData={image.data}
+            width={image.width}
+            height={image.height}
+            snap={snap}
+            symmetry={symmetry}
+            onUpdatePoints={(pts) => setPoints(pts)}
+          />
+        </div>
+        <div>
+          <TriangleBox
+            imageData={image.data}
+            width={image.width}
+            height={image.height}
+            snap={snap}
+            points={points}
+            symmetry={symmetry}
+          />
+        </div>
       </div>
     </div>
   );
