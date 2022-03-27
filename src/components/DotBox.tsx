@@ -3,6 +3,7 @@ import { applySymmetry } from "./symmetry";
 import { applySnap, Point } from "./Point";
 
 interface DotBoxProps {
+  imageData?: ImageData;
   width: number;
   height: number;
   symmetry: number;
@@ -14,6 +15,7 @@ export const DotBox: React.FunctionComponent<DotBoxProps> = (
   props: DotBoxProps
 ) => {
   const svgRef = React.useRef<SVGSVGElement>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [points, setPoints] = React.useState<Point[]>([]);
   const [selected, setSelected] = React.useState<number>(-1);
 
@@ -84,9 +86,34 @@ export const DotBox: React.FunctionComponent<DotBoxProps> = (
 
   const snapped = applySnap(symPoints, props.snap);
 
+  React.useEffect(() => {
+    if (!props.imageData || !canvasRef.current) {
+      return;
+    }
+
+    const ctx = canvasRef.current.getContext("2d");
+    if (!ctx) {
+      return;
+    }
+    ctx.putImageData(props.imageData, 0, 0);
+  }, [props.imageData]);
+
   return (
-    <div style={{ border: "solid 1px #888", width: "fit-content" }}>
+    <div
+      style={{
+        display: "grid",
+        border: "solid 1px #888",
+        width: "fit-content",
+      }}
+    >
+      <canvas
+        style={{ gridRowStart: 1, gridColumnStart: 1 }}
+        width={props.width}
+        height={props.height}
+        ref={canvasRef}
+      />
       <svg
+        style={{ gridRowStart: 1, gridColumnStart: 1 }}
         ref={svgRef}
         width={props.width}
         height={props.height}
