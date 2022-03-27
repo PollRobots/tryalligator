@@ -10,6 +10,7 @@
     "lib": ["dom", "esnext"],
     "declaration": false,
     "strict": true,
+    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true
   }
 }
