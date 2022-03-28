@@ -1,7 +1,7 @@
 import React from "react";
 import Delaunator from "delaunator";
 import { applySymmetry } from "./symmetry";
-import { applySnap, IndexedPoint, Point } from "./Point";
+import { applySnap, IndexedPoint, Point } from "./point";
 
 interface TriangleBoxProps {
   imageData?: ImageData;
@@ -152,7 +152,7 @@ function computeFill(points: Point[], imageData: ImageData, width: number) {
       x:
         points[0].x +
         ((points[1].y - points[0].y) * (points[2].x - points[0].x)) /
-          (points[2].y - points[0].y),
+        (points[2].y - points[0].y),
       y: points[1].y,
     };
     bottomFlatTriangle([points[0], points[1], intercept]);

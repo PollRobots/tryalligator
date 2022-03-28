@@ -1,6 +1,6 @@
 import React from "react";
 import { applySymmetry } from "./symmetry";
-import { applySnap, Point } from "./Point";
+import { applySnap, Point } from "./point";
 
 interface DotBoxProps {
   imageData?: ImageData;
