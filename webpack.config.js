@@ -22,7 +22,7 @@ module.exports = (env, argv) => {
         publicPath: distPath,
       },
     },
-    devtool: "source-map",
+    devtool: isProduction ? undefined : "source-map",
     resolve: {
       extensions: [".ts", ".tsx", ".js"],
     },
