@@ -2,6 +2,7 @@ const path = require("path");
 const HtmlWebpack = require("html-webpack-plugin");
 const TerserWebpack = require("terser-webpack-plugin");
 const { CleanWebpackPlugin: CleanWebpack } = require("clean-webpack-plugin");
+const CopyWebpack = require("copy-webpack-plugin");
 
 module.exports = (env, argv) => {
   const isProduction = argv.mode === "production";
@@ -57,6 +58,9 @@ module.exports = (env, argv) => {
         title: "Try Alligator",
         filename: "tryalligator.html",
         template: template,
+      }),
+      new CopyWebpack({
+        patterns: [{ from: "./assets", to: "assets" }],
       }),
     ],
   };
