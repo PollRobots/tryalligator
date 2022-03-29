@@ -1,4 +1,4 @@
-# tryalligator
+<img src="./tryalligator.svg" style="display:block; width: 3in">
 
 A tool for tryalligatoring (triangulating) images
 
