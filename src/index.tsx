@@ -125,7 +125,20 @@ const App: React.FC = () => {
 
   return (
     <div>
-      <h1>Try Alligator</h1>
+      <div
+        style={{
+          display: "flex",
+          gridTemplateColumns: "auto 1fr",
+          columnGap: "1em",
+        }}
+      >
+        <img
+          src="assets/tryalligator.icon.svg"
+          alt="Try Alligator"
+          style={{ height: "5em" }}
+        />
+        <h1>Try Alligator</h1>
+      </div>
       <div>
         Symmetry:{" "}
         <select
