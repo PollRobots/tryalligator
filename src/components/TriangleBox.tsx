@@ -2,6 +2,7 @@ import React from "react";
 import Delaunator from "delaunator";
 import { applySymmetry } from "./symmetry";
 import { applySnap, IndexedPoint, Point } from "./point";
+import { WorkCache } from "./WorkCache";
 
 interface TriangleBoxProps {
   imageData?: ImageData;
@@ -32,6 +33,10 @@ export const TriangleBox: React.FC<TriangleBoxProps> = (
   for (let i = 0; i < triangles.length; i += 3) {
     vertices.push([triangles[i], triangles[i + 1], triangles[i + 2]]);
   }
+  if (props.imageData && gImage != props.imageData) {
+    gImage = props.imageData;
+    triangleFillCache.clear();
+  }
   const core = vertices.map((t, i) => (
     <Triangle
       key={i}
@@ -41,6 +46,7 @@ export const TriangleBox: React.FC<TriangleBoxProps> = (
       width={props.width}
     />
   ));
+  triangleFillCache.advance();
   if (props.svgGroupOnly) {
     return <g>{core}</g>;
   }
@@ -79,8 +85,22 @@ const Triangle: React.FC<TriangleProps> = (props: TriangleProps) => {
   );
 };
 
-function computeFill(points: Point[], imageData: ImageData, width: number) {
-  points.sort((a, b) => a.y - b.y);
+interface TriangleFillArgs {
+  points: Point[];
+  width: number;
+  imageData: ImageData;
+}
+
+interface TriangleFillResult {
+  r: number;
+  g: number;
+  b: number;
+}
+
+const triangleFillCache = new WorkCache(computeFillInner);
+let gImage: ImageData;
+
+function computeFillInner({ points, width, imageData }: TriangleFillArgs): TriangleFillResult {
   const data = { rSum: 0, gSum: 0, bSum: 0, count: 0 };
 
   const bottomFlatTriangle = (points: Point[]) => {
@@ -160,11 +180,18 @@ function computeFill(points: Point[], imageData: ImageData, width: number) {
   }
 
   if (data.count <= 0) {
-    return "none";
+    return { r: 0, g: 0, b: 0 };
   }
 
   const r = Math.round(data.rSum / data.count);
   const g = Math.round(data.gSum / data.count);
   const b = Math.round(data.bSum / data.count);
+  return { r: r, g: g, b: b };
+}
+
+
+function computeFill(points: Point[], imageData: ImageData, width: number) {
+  points.sort((a, b) => a.y - b.y);
+  const { r, g, b } = triangleFillCache.compute(JSON.stringify(points), { points: points, width: width, imageData: imageData });
   return `rgb(${r}, ${g}, ${b})`;
 }

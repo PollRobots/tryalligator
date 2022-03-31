@@ -4,6 +4,7 @@ import { applySnap, Point } from "./point";
 
 interface DotBoxProps {
   imageData?: ImageData;
+  points: Point[];
   width: number;
   height: number;
   symmetry: number;
@@ -16,11 +17,9 @@ export const DotBox: React.FunctionComponent<DotBoxProps> = (
 ) => {
   const svgRef = React.useRef<SVGSVGElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
-  const [points, setPoints] = React.useState<Point[]>([]);
   const [selected, setSelected] = React.useState<number>(-1);
 
   const updatePoints = (updated: Point[]) => {
-    setPoints(updated);
     if (props.onUpdatePoints) {
       props.onUpdatePoints(updated);
     }
@@ -47,7 +46,7 @@ export const DotBox: React.FunctionComponent<DotBoxProps> = (
     if (!svgP) {
       return;
     }
-    updatePoints([...points, { x: svgP.x, y: svgP.y }]);
+    updatePoints([...props.points, { x: svgP.x, y: svgP.y }]);
   };
 
   const onMouseDown = (
@@ -65,7 +64,7 @@ export const DotBox: React.FunctionComponent<DotBoxProps> = (
     if (!svgP) {
       return;
     }
-    const updated = [...points];
+    const updated = [...props.points];
     updated[selected] = { x: svgP.x, y: svgP.y };
     updatePoints(updated);
   };
@@ -78,7 +77,7 @@ export const DotBox: React.FunctionComponent<DotBoxProps> = (
   };
 
   const symPoints = applySymmetry(
-    points,
+    props.points,
     props.width,
     props.height,
     props.symmetry

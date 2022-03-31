@@ -173,6 +173,13 @@ const App: React.FC = () => {
         >
           Save Image
         </button>
+        <button
+          style={{ width: "8em", height: "2em", margin: "0.5em" }}
+          onClick={() => setPoints([])}
+          disabled={!points.length}
+        >
+          Clear Points
+        </button>
       </div>
       <div
         style={{
@@ -185,6 +192,7 @@ const App: React.FC = () => {
         <div>
           <DotBox
             imageData={image.data}
+            points={points}
             width={image.width}
             height={image.height}
             snap={snap}
