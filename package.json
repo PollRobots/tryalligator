@@ -13,10 +13,13 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/color-convert": "^2.0.0",
     "@types/delaunator": "^5.0.0",
     "@types/react": "^17.0.43",
     "@types/react-dom": "^17.0.14",
+    "@types/wicg-file-system-access": "^2020.9.5",
     "clean-webpack-plugin": "^4.0.0",
+    "color-convert": "^2.0.1",
     "copy-webpack-plugin": "^10.2.4",
     "delaunator": "^5.0.0",
     "html-webpack-plugin": "^5.5.0",

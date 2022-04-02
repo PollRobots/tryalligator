@@ -1,23 +1,36 @@
 import React from "react";
 import ReactDOM, { render } from "react-dom";
 import { renderToString } from "react-dom/server";
+import { Adjustment, AdjustmentEditor } from "./components/AdjustmentEditor";
 
 import { DotBox } from "./components/DotBox";
 import { TriangleBox } from "./components/TriangleBox";
 
 const kSymmetry = ["None", "Horizontal", "Vertical", "Both"];
 
+interface Image {
+  data?: ImageData;
+  name?: string;
+  width: number;
+  height: number;
+}
+
+const kEmptyImage: Image = { width: 512, height: 512 };
+
+const kEmptyAdjustment: Adjustment = {
+  apply: false,
+  whitePoint: 255,
+  blackPoint: 0,
+  saturationFactor: 0,
+};
+
 const App: React.FC = () => {
   const [points, setPoints] = React.useState<{ x: number; y: number }[]>([]);
   const [snap, setSnap] = React.useState<number>(0);
   const [symmetry, setSymmetry] = React.useState<number>(0);
   const [loading, setLoading] = React.useState<boolean>(false);
-  const [image, setImage] = React.useState<{
-    data?: ImageData;
-    name?: string;
-    width: number;
-    height: number;
-  }>({ width: 512, height: 512 });
+  const [image, setImage] = React.useState<Image>(kEmptyImage);
+  const [adjust, setAdjust] = React.useState<Adjustment>(kEmptyAdjustment);
 
   const selectImage = () => {
     const input = document.createElement("input");
@@ -87,7 +100,7 @@ const App: React.FC = () => {
     setLoading(false);
   };
 
-  const saveImage = () => {
+  const saveImage = async () => {
     if (!image.name) {
       return;
     }
@@ -99,28 +112,46 @@ const App: React.FC = () => {
         snap={snap}
         points={points}
         symmetry={symmetry}
+        adjust={adjust}
         svgGroupOnly={true}
       />
     );
-    const link = document.createElement("a");
     const last = image.name.lastIndexOf(".");
     const basename = last > 0 ? image.name.substring(0, last) : image.name;
-    link.setAttribute("download", `${basename}.tryalligatored.svg`);
+    const filename = `${basename}.tryalligatored.svg`;
     const blob = new Blob(
       [
         '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n',
         '<svg xmlns="http://www.w3.org/2000/svg"',
         ' xmlns:xlink="http://www.w3.org/1999/xlink"',
         ` width="${image.width / 96}in" height="${image.height / 96}in"`,
-        ` viewBox="0 0 ${image.width} ${image.height}">\n`,
+        ` viewBox="0 0 ${image.width * 10} ${image.height * 10}">\n`,
         core,
         "\n</svg>",
       ],
       { type: "image/svg+xml" }
     );
-    link.href = URL.createObjectURL(blob);
 
-    link.click();
+    if (Reflect.has(window, "showSaveFilePicker")) {
+      const handle = await showSaveFilePicker({
+        suggestedName: filename,
+        types: [
+          {
+            description: "SVG files",
+            accept: { "image/svg+xml": [".svg"] },
+          },
+        ],
+      });
+      const writeable = await handle.createWritable();
+      await writeable.write(blob);
+      await writeable.close();
+    } else {
+      const link = document.createElement("a");
+      link.setAttribute("download", filename);
+      link.href = URL.createObjectURL(blob);
+
+      link.click();
+    }
   };
 
   return (
@@ -208,9 +239,11 @@ const App: React.FC = () => {
             snap={snap}
             points={points}
             symmetry={symmetry}
+            adjust={adjust}
           />
         </div>
       </div>
+      <AdjustmentEditor {...adjust} onChange={(update) => setAdjust(update)} />
     </div>
   );
 };

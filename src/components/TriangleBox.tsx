@@ -3,6 +3,8 @@ import Delaunator from "delaunator";
 import { applySymmetry } from "./symmetry";
 import { applySnap, IndexedPoint, Point } from "./point";
 import { WorkCache } from "./WorkCache";
+import { Adjustment } from "./AdjustmentEditor";
+import { adjustColor, Color } from "./color";
 
 interface TriangleBoxProps {
   imageData?: ImageData;
@@ -11,6 +13,7 @@ interface TriangleBoxProps {
   symmetry: number;
   snap: number;
   points: Point[];
+  adjust: Adjustment;
   svgGroupOnly?: boolean;
 }
 
@@ -44,6 +47,7 @@ export const TriangleBox: React.FC<TriangleBoxProps> = (
       points={snapped}
       imageData={props.imageData}
       width={props.width}
+      adjust={props.adjust}
     />
   ));
   triangleFillCache.advance();
@@ -55,7 +59,7 @@ export const TriangleBox: React.FC<TriangleBoxProps> = (
       <svg
         width={props.width}
         height={props.height}
-        viewBox={`0 0 ${props.width} ${props.height}`}
+        viewBox={`0 0 ${props.width * 10} ${props.height * 10}`}
       >
         {core}
       </svg>
@@ -68,19 +72,24 @@ interface TriangleProps {
   width: number;
   vertices: number[];
   points: Point[];
+  adjust: Adjustment;
 }
 
 const Triangle: React.FC<TriangleProps> = (props: TriangleProps) => {
   const points = props.vertices.map((i) => props.points[i]);
   let fill = "none";
   if (props.imageData) {
-    fill = computeFill(points, props.imageData, props.width);
+    fill = computeFill(points, props.imageData, props.width, props.adjust);
   }
   return (
     <polygon
-      points={points.map((p) => `${p.x},${p.y}`).join(" ")}
-      fill={fill}
-      stroke={fill === "none" ? "black" : fill}
+      points={points.map((p) => `${p.x * 10},${p.y * 10}`).join(" ")}
+      style={{
+        fill: fill,
+        stroke: fill === "none" ? "black" : fill,
+        vectorEffect: "non-scaling-stroke",
+        strokeWidth: "1px",
+      }}
     />
   );
 };
@@ -91,16 +100,14 @@ interface TriangleFillArgs {
   imageData: ImageData;
 }
 
-interface TriangleFillResult {
-  r: number;
-  g: number;
-  b: number;
-}
-
 const triangleFillCache = new WorkCache(computeFillInner);
 let gImage: ImageData;
 
-function computeFillInner({ points, width, imageData }: TriangleFillArgs): TriangleFillResult {
+function computeFillInner({
+  points,
+  width,
+  imageData,
+}: TriangleFillArgs): Color {
   const data = { rSum: 0, gSum: 0, bSum: 0, count: 0 };
 
   const bottomFlatTriangle = (points: Point[]) => {
@@ -172,7 +179,7 @@ function computeFillInner({ points, width, imageData }: TriangleFillArgs): Trian
       x:
         points[0].x +
         ((points[1].y - points[0].y) * (points[2].x - points[0].x)) /
-        (points[2].y - points[0].y),
+          (points[2].y - points[0].y),
       y: points[1].y,
     };
     bottomFlatTriangle([points[0], points[1], intercept]);
@@ -189,9 +196,27 @@ function computeFillInner({ points, width, imageData }: TriangleFillArgs): Trian
   return { r: r, g: g, b: b };
 }
 
-
-function computeFill(points: Point[], imageData: ImageData, width: number) {
+function computeFill(
+  points: Point[],
+  imageData: ImageData,
+  width: number,
+  adjust: Adjustment
+) {
   points.sort((a, b) => a.y - b.y);
-  const { r, g, b } = triangleFillCache.compute(JSON.stringify(points), { points: points, width: width, imageData: imageData });
-  return `rgb(${r}, ${g}, ${b})`;
+  const color = triangleFillCache.compute(JSON.stringify(points), {
+    points: points,
+    width: width,
+    imageData: imageData,
+  });
+  if (adjust.apply) {
+    const adjusted = adjustColor(
+      color,
+      adjust.whitePoint,
+      adjust.blackPoint,
+      adjust.saturationFactor
+    );
+    return `rgb(${adjusted.r}, ${adjusted.g}, ${adjusted.b})`;
+  } else {
+    return `rgb(${color.r}, ${color.g}, ${color.b})`;
+  }
 }

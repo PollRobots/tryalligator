@@ -1,13 +1,19 @@
 {
-  "include": ["./src/**/*.ts", "./src/**/*.tsx"],
+  "include": [
+    "./src/**/*.ts",
+    "./src/**/*.tsx"
+  ],
   "compilerOptions": {
     "outDir": "./dist/",
     "sourceMap": true,
     "noImplicitAny": true,
     "module": "ES2020",
-    "target": "ESNext",
-    "jsx":"react",
-    "lib": ["dom", "esnext"],
+    "target": "ES2021",
+    "jsx": "react",
+    "lib": [
+      "dom",
+      "ES2021"
+    ],
     "declaration": false,
     "strict": true,
     "moduleResolution": "node",
