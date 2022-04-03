@@ -168,6 +168,7 @@ export const DotBox: React.FunctionComponent<DotBoxProps> = (
         display: "grid",
         border: "solid 1px #888",
         width: "fit-content",
+        cursor: "crosshair",
       }}
     >
       <canvas

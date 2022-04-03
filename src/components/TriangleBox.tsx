@@ -52,7 +52,11 @@ export const TriangleBox: React.FC<TriangleBoxProps> = (
   ));
   triangleFillCache.advance();
   if (props.svgGroupOnly) {
-    return <g>{core}</g>;
+    return (
+      <g style={{ vectorEffect: "non-scaling-stroke", strokeWidth: 3 }}>
+        {core}
+      </g>
+    );
   }
   return (
     <div style={{ border: "solid 1px #888", width: "fit-content" }}>
@@ -61,7 +65,9 @@ export const TriangleBox: React.FC<TriangleBoxProps> = (
         height={props.height}
         viewBox={`0 0 ${props.width * 10} ${props.height * 10}`}
       >
-        {core}
+        <g style={{ vectorEffect: "non-scaling-stroke", strokeWidth: 3 }}>
+          {core}
+        </g>
       </svg>
     </div>
   );
@@ -81,14 +87,15 @@ const Triangle: React.FC<TriangleProps> = (props: TriangleProps) => {
   if (props.imageData) {
     fill = computeFill(points, props.imageData, props.width, props.adjust);
   }
+  const scaled = points.map(
+    (pt) => `${Math.round(pt.x * 10)},${Math.round(pt.y * 10)}`
+  );
   return (
-    <polygon
-      points={points.map((p) => `${p.x * 10},${p.y * 10}`).join(" ")}
+    <path
+      d={`M ${scaled[0]} L ${scaled[1]} ${scaled[2]} Z`}
       style={{
         fill: fill,
         stroke: fill === "none" ? "black" : fill,
-        vectorEffect: "non-scaling-stroke",
-        strokeWidth: "1px",
       }}
     />
   );
