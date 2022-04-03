@@ -19,6 +19,11 @@ export const DotBox: React.FunctionComponent<DotBoxProps> = (
   const svgRef = React.useRef<SVGSVGElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const [selected, setSelected] = React.useState<number>(-1);
+  const [zoom, setZoom] = React.useState<{
+    factor: number;
+    x: number;
+    y: number;
+  }>({ factor: 1, x: 0, y: 0 });
 
   const updatePoints = (updated: Point[]) => {
     if (props.onUpdatePoints) {
@@ -47,7 +52,46 @@ export const DotBox: React.FunctionComponent<DotBoxProps> = (
     if (!svgP) {
       return;
     }
-    updatePoints([...props.points, { x: svgP.x, y: svgP.y }]);
+    if (evt.ctrlKey) {
+      if (zoom.factor > 1 && svgRef.current) {
+        const factor = Math.max(1, zoom.factor - 0.5);
+        if (factor == 1) {
+          setZoom({ factor: 1, x: 0, y: 0 });
+        } else {
+          const bounds = svgRef.current.getBoundingClientRect();
+          const offsetX = evt.clientX - bounds.left;
+          const offsetY = evt.clientY - bounds.top;
+
+          // ? / factor + offset / factor = svgP * oldFactor
+          // ? = factor * (svgP * oldFactor - offset / factor)
+          setZoom({
+            factor: factor,
+            x: factor * (svgP.x - offsetX / factor),
+            y: factor * (svgP.y - offsetY / factor),
+          });
+        }
+      }
+    } else if (evt.shiftKey) {
+      if (zoom.factor < 10 && svgRef.current) {
+        const factor = Math.min(10, zoom.factor + 0.5);
+
+        const bounds = svgRef.current.getBoundingClientRect();
+        const offsetX = evt.clientX - bounds.left;
+        const offsetY = evt.clientY - bounds.top;
+
+        // ? / factor + offset / factor = svgP
+        // ? = factor * (svgP - offset / factor)
+
+        setZoom({
+          factor: factor,
+          x: factor * (svgP.x - offsetX / factor),
+          y: factor * (svgP.y - offsetY / factor),
+        });
+      }
+    } else {
+      updatePoints([...props.points, { x: svgP.x, y: svgP.y }]);
+    }
+    evt.preventDefault();
   };
 
   const onMouseDown = (
@@ -86,8 +130,22 @@ export const DotBox: React.FunctionComponent<DotBoxProps> = (
     if (!ctx) {
       return;
     }
-    ctx.putImageData(props.imageData, 0, 0);
-  }, [props.imageData]);
+    const temp = document.createElement("canvas");
+    temp.width = props.width;
+    temp.height = props.height;
+    temp.getContext("2d")?.putImageData(props.imageData, 0, 0);
+    ctx.drawImage(
+      temp,
+      zoom.x / zoom.factor,
+      zoom.y / zoom.factor,
+      props.width / zoom.factor,
+      props.height / zoom.factor,
+      0,
+      0,
+      props.width,
+      props.height
+    );
+  }, [props.imageData, zoom.factor]);
 
   const pointColor = (point: Point, r: number): string => {
     if (!props.imageData) {
@@ -196,19 +254,21 @@ export const DotBox: React.FunctionComponent<DotBoxProps> = (
         ref={svgRef}
         width={props.width}
         height={props.height}
-        viewBox={`0 0 ${props.width} ${props.height}`}
+        viewBox={`${zoom.x / zoom.factor} ${zoom.y / zoom.factor} ${
+          props.width / zoom.factor
+        } ${props.height / zoom.factor}`}
         onClick={(e) => onSvgClick(e)}
         onMouseMove={(e) => onMouseMove(e)}
       >
-        <g transform="scale(0.1)" strokeWidth={5}>
+        <g transform="scale(0.1)" strokeWidth={10 / zoom.factor}>
           {core}
         </g>
-        <g>
+        <g strokeWidth={1 / zoom.factor}>
           {props.snapped.map((p, i) => (
             <circle
               cx={p.x}
               cy={p.y}
-              r={selected === p.i ? 8 : 4}
+              r={(selected === p.i ? 8 : 4) / zoom.factor}
               key={i}
               fill="transparent"
               stroke={pointColor(p, 4)}
