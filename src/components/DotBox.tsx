@@ -97,6 +97,71 @@ export const DotBox: React.FunctionComponent<DotBoxProps> = (
     ctx.putImageData(props.imageData, 0, 0);
   }, [props.imageData]);
 
+  const pointColor = (point: Point, r: number): string => {
+    if (!props.imageData) {
+      return "#000000";
+    }
+
+    const cx = Math.round(point.x);
+    const cy = Math.round(point.y);
+
+    let x = 0;
+    let y = r;
+    let e = 0;
+    const limit = r;
+
+    const sum = { r: 0, g: 0, b: 0, count: 0 };
+
+    const accum = (lowx: number, highx: number, y: number) => {
+      if (!props.imageData) {
+        return;
+      }
+      const yOff = y * props.width * 4;
+      for (let x = lowx; x <= highx; x++) {
+        const i = yOff + x * 4;
+        sum.r += props.imageData.data[i];
+        sum.g += props.imageData.data[i + 1];
+        sum.b += props.imageData.data[i + 2];
+        sum.count++;
+      }
+    };
+
+    while (y >= x) {
+      if (e >= limit) {
+        e += 1 - 2 * y;
+        accum(cx - x, cx + x, cy + y);
+        accum(cx - x, cx + x, cy - y);
+        y--;
+      } else {
+        e += 2 * x + 1;
+        accum(cy - y, cy + y, cx + x);
+        accum(cy - y, cy + y, cx - x);
+        x++;
+      }
+    }
+
+    if (!sum.count) {
+      return "#000000";
+    }
+
+    const avg_r = Math.round(sum.r / sum.count) / 255;
+    const avg_g = Math.round(sum.g / sum.count) / 255;
+    const avg_b = Math.round(sum.b / sum.count) / 255;
+
+    const cmax = Math.max(avg_r, avg_g, avg_b);
+    const cmin = Math.min(avg_r, avg_g, avg_b);
+    const delta = cmax - cmin;
+    const lum = (cmax + cmin) / 2;
+    const sat = delta === 0 ? 0 : delta / (1 - Math.abs(2 * lum - 1));
+    if (sat < 0.25) {
+      return "#ff00ff";
+    } else if (lum > 0.5) {
+      return "#000000";
+    } else {
+      return "#ffffff";
+    }
+  };
+
   return (
     <div
       style={{
@@ -127,7 +192,7 @@ export const DotBox: React.FunctionComponent<DotBoxProps> = (
             r={selected === p.i ? 8 : 4}
             key={i}
             fill="transparent"
-            stroke="black"
+            stroke={pointColor(p, 4)}
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => onMouseDown(e, p.i)}
             onMouseUp={(e) => onMouseUp(e, p.i)}
