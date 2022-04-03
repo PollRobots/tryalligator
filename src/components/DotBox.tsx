@@ -1,14 +1,15 @@
 import React from "react";
-import { applySymmetry } from "./symmetry";
-import { applySnap, Point } from "./point";
+import { IndexedPoint, Point } from "./point";
+import { Triangle } from "./Triangle";
 
 interface DotBoxProps {
   imageData?: ImageData;
   points: Point[];
+  snapped: IndexedPoint[];
   width: number;
   height: number;
-  symmetry: number;
-  snap: number;
+  triangles: Uint32Array;
+  showTriangles?: boolean;
   onUpdatePoints?: (points: Point[]) => void;
 }
 
@@ -75,15 +76,6 @@ export const DotBox: React.FunctionComponent<DotBoxProps> = (
   ) => {
     setSelected(-1);
   };
-
-  const symPoints = applySymmetry(
-    props.points,
-    props.width,
-    props.height,
-    props.symmetry
-  );
-
-  const snapped = applySnap(symPoints, props.snap);
 
   React.useEffect(() => {
     if (!props.imageData || !canvasRef.current) {
@@ -162,6 +154,28 @@ export const DotBox: React.FunctionComponent<DotBoxProps> = (
     }
   };
 
+  const core: React.ReactNode[] = [];
+  if (props.showTriangles) {
+    const vertices: number[][] = [];
+    for (let i = 0; i < props.triangles.length; i += 3) {
+      vertices.push([
+        props.triangles[i],
+        props.triangles[i + 1],
+        props.triangles[i + 2],
+      ]);
+    }
+    vertices.forEach((t, i) =>
+      core.push(
+        <Triangle
+          key={i}
+          vertices={t}
+          points={props.points}
+          width={props.width}
+        />
+      )
+    );
+  }
+
   return (
     <div
       style={{
@@ -186,19 +200,24 @@ export const DotBox: React.FunctionComponent<DotBoxProps> = (
         onClick={(e) => onSvgClick(e)}
         onMouseMove={(e) => onMouseMove(e)}
       >
-        {snapped.map((p, i) => (
-          <circle
-            cx={p.x}
-            cy={p.y}
-            r={selected === p.i ? 8 : 4}
-            key={i}
-            fill="transparent"
-            stroke={pointColor(p, 4)}
-            onClick={(e) => e.stopPropagation()}
-            onMouseDown={(e) => onMouseDown(e, p.i)}
-            onMouseUp={(e) => onMouseUp(e, p.i)}
-          />
-        ))}
+        <g transform="scale(0.1)" strokeWidth={5}>
+          {core}
+        </g>
+        <g>
+          {props.snapped.map((p, i) => (
+            <circle
+              cx={p.x}
+              cy={p.y}
+              r={selected === p.i ? 8 : 4}
+              key={i}
+              fill="transparent"
+              stroke={pointColor(p, 4)}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => onMouseDown(e, p.i)}
+              onMouseUp={(e) => onMouseUp(e, p.i)}
+            />
+          ))}
+        </g>
       </svg>
     </div>
   );

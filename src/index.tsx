@@ -1,9 +1,12 @@
+import Delaunator from "delaunator";
 import React from "react";
 import ReactDOM, { render } from "react-dom";
 import { renderToString } from "react-dom/server";
 import { Adjustment, AdjustmentEditor } from "./components/AdjustmentEditor";
 
 import { DotBox } from "./components/DotBox";
+import { applySnap, IndexedPoint } from "./components/point";
+import { applySymmetry } from "./components/symmetry";
 import { TriangleBox } from "./components/TriangleBox";
 
 const kSymmetry = ["None", "Horizontal", "Vertical", "Both"];
@@ -28,9 +31,18 @@ const App: React.FC = () => {
   const [points, setPoints] = React.useState<{ x: number; y: number }[]>([]);
   const [snap, setSnap] = React.useState<number>(0);
   const [symmetry, setSymmetry] = React.useState<number>(0);
+  const [showTriangles, setShowTriangles] = React.useState<boolean>(false);
   const [loading, setLoading] = React.useState<boolean>(false);
   const [image, setImage] = React.useState<Image>(kEmptyImage);
   const [adjust, setAdjust] = React.useState<Adjustment>(kEmptyAdjustment);
+
+  const symPoints = applySymmetry(points, image.width, image.height, symmetry);
+  const snapped = applySnap(symPoints, snap);
+  const triangles = Delaunator.from(
+    snapped,
+    (p) => p.x,
+    (p) => p.y
+  ).triangles;
 
   const selectImage = () => {
     const input = document.createElement("input");
@@ -109,10 +121,9 @@ const App: React.FC = () => {
         imageData={image.data}
         width={image.width}
         height={image.height}
-        snap={snap}
-        points={points}
-        symmetry={symmetry}
+        points={snapped}
         adjust={adjust}
+        triangles={triangles}
         svgGroupOnly={true}
       />
     );
@@ -189,7 +200,14 @@ const App: React.FC = () => {
           step={1}
           value={snap}
           onChange={(e) => setSnap(Number(e.target.value))}
-        />
+        />{" "}
+        <label htmlFor="chkShowTriangles">Show Triangles: </label>
+        <input
+          type="checkbox"
+          checked={showTriangles}
+          onClick={() => setShowTriangles(!showTriangles)}
+          id="chkShowTriangles"
+        />{" "}
         <button
           style={{ width: "8em", height: "2em", margin: "0.5em" }}
           onClick={() => selectImage()}
@@ -224,10 +242,11 @@ const App: React.FC = () => {
           <DotBox
             imageData={image.data}
             points={points}
+            snapped={snapped}
             width={image.width}
             height={image.height}
-            snap={snap}
-            symmetry={symmetry}
+            triangles={triangles}
+            showTriangles={showTriangles}
             onUpdatePoints={(pts) => setPoints(pts)}
           />
         </div>
@@ -236,10 +255,9 @@ const App: React.FC = () => {
             imageData={image.data}
             width={image.width}
             height={image.height}
-            snap={snap}
-            points={points}
-            symmetry={symmetry}
+            points={snapped}
             adjust={adjust}
+            triangles={triangles}
           />
         </div>
       </div>
